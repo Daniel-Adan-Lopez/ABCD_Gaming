@@ -1,0 +1,52 @@
+title:  calculating Mcdonald's omega
+data:
+file is "C:\Users\indoo\Desktop\VGAQ_num.dat";
+ 
+ 
+
+variable:
+NAMES = src_subject_id vgaq1_numeric_3 vgaq1_numeric_4 vgaq1_numeric_5
+     vgaq2_numeric_3 vgaq2_numeric_4 vgaq2_numeric_5 vgaq3_numeric_3 vgaq3_numeric_4
+     vgaq3_numeric_5 vgaq4_numeric_3 vgaq4_numeric_4 vgaq4_numeric_5 vgaq5_numeric_3
+     vgaq5_numeric_4 vgaq5_numeric_5 vgaq6_numeric_3 vgaq6_numeric_4 vgaq6_numeric_5
+     visit_3 visit_4 visit_5;  
+ 
+
+missing are .;
+
+usevariables are
+vgaq1_numeric_5 
+     vgaq2_numeric_5 vgaq3_numeric_5 vgaq4_numeric_5 vgaq5_numeric_5
+     vgaq6_numeric_5 ; 
+     
+ 
+ 
+ 
+ANALYSIS: TYPE = GENERAL;
+          ESTIMATOR = ML;  ! Use ML for Maximum Likelihood estimation
+
+MODEL:
+f BY vgaq1_numeric_5-vgaq6_numeric_5*(load1-load6);
+f@1;
+vgaq1_numeric_5-vgaq6_numeric_5(resv1-resv6);
+
+MODEL CONSTRAINT:
+NEW(omega);
+omega = (load1+load2+load3+load4+load5+load6)^2/((load1+load2+load3+load4+load5+load6)^2
++resv1+resv2+resv3+resv4+resv5+resv6);
+
+OUTPUT:
+CINTERVAL(BCBOOTSTRAP);
+
+
+  
+ !visit 2 was New/Additional Parameters
+  !  OMEGA              0.862      0.002    360.121      0.000
+  
+!visit 3
+!New/Additional Parameters
+!    OMEGA              0.869      0.002    397.298      0.000
+
+!visit 4 full
+!New/Additional Parameters
+!OMEGA              0.875      0.002    392.601      0.000
