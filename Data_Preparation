@@ -1,0 +1,217 @@
+#script for manuscript "The longitudinal association between reward processing and symptoms of video game addiction in the Adolescent Brain Cognitive Development Study"
+#Updated 8/12/2024
+
+#analysis used data from the ABCD 5.1 data release..
+library(dplyr)
+library(brms)
+
+###########################
+#following variables were used in the final analysis
+#1. Interview_age, 2. sex, 3. eventname, 4. rel_family_id.bl, 5. high.educ.bl, 6. household.income.bl, 7. site_id_l, 8. src_subject_id
+#9. pmq_y_ss_mean, 10. ksads_14_853_p, 11. ksads2_14_809_p, 12. race_ethnicity, 13. neighborhood_crime_y
+
+#
+#code to create the ADHD summary variable
+
+ABCD_VGAQ<- demo %>% 
+  mutate(ADHD_Present_KSAD = case_when(
+    ksads_14_853_p == "0" ~ "no",
+    ksads_14_853_p == "1" ~ "yes",
+    ksads_14_853_p == "888" ~ "no",
+    ksads2_14_809_p == "0" ~ "no",
+    ksads2_14_809_p == "1" ~ "yes",
+    ksads2_14_809_p == "888" ~ "no"))
+
+##
+
+#VGAQ items
+e <- non_imaging_nt_ONLY_5.1$`data/novel-technologies.data/novel-technologies/nt_y_st.csv`[,c("src_subject_id", "eventname", "screentime_vgaq1",
+                                                                                              "screentime_vgaq2", "screentime_vgaq3", "screentime_vgaq4",
+                                                                                              "screentime_vgaq5", "screentime_vgaq6")]
+
+ABCD_VGAQ <-  merge(ABCD_VGAQ, e,
+                all.x =TRUE, by=c("eventname", "src_subject_id"))
+
+#total score for the VGAQ
+ABCD_VGAQ$VGTotal_zero <- (ABCD_VGAQ$vgaq1_numeric + ABCD_VGAQ$vgaq2_numeric + ABCD_VGAQ$vgaq3_numeric + ABCD_VGAQ$vgaq4_numeric +
+                                 ABCD_VGAQ$vgaq5_numeric + ABCD_VGAQ$vgaq6_numeric)
+######
+
+#filter out all but years 2, 3, 4
+ 
+ABCD_VGAQ <-  ABCD_VGAQ %>%
+  filter(eventname == "2_year_follow_up_y_arm_1" | eventname == "3_year_follow_up_y_arm_1" |
+           eventname == "4_year_follow_up_y_arm_1")
+table(ABCD_VGAQ$eventname)
+# 2_year_follow_up_y_arm_1 3_year_follow_up_y_arm_1 4_year_follow_up_y_arm_1 
+#          10973                    10336                     4754 
+
+######
+
+##
+#need to change the household income variable
+ABCD_VGAQ<- ABCD_VGAQ %>% 
+  mutate(hhincome_bl = case_when(
+    household.income.bl == "Less than $5,000" ~ "[<50K]",
+    household.income.bl == "$5,000 through $11,999" ~ "[<50K]",
+    household.income.bl == "$12,000 through $15,999" ~ "[<50K]",
+    household.income.bl == "$16,000 through $24,999" ~ "[<50K]",
+    household.income.bl == "$25,000 through $34,999" ~ "[<50K]",
+    household.income.bl == "$35,000 through $49,999" ~ "[<50K]",
+    household.income.bl == "$50,000 through $74,999" ~ "[>=50K & <100K]",
+    household.income.bl == "$75,000 through $99,999" ~ "[>=50K & <100K]",
+    household.income.bl == "$100,000 through $199,999" ~ "[>=100K]",
+    household.income.bl == "$200,000 and greater" ~ "[>=100K]",
+    household.income.bl == "Don't know" ~ "DNK",
+    household.income.bl == "Refuse to answer No deseo responder" ~ "Refuse to answer"
+  ))
+
+################
+#cleaning up education variable
+ABCD_VGAQ<- ABCD_VGAQ %>% 
+  mutate(high_educ_bl = case_when(
+    high.educ.bl == "1st grade" ~ "< HS Diploma",
+    high.educ.bl == "2nd grade" ~ "< HS Diploma",
+    high.educ.bl == "3rd grade" ~ "< HS Diploma",
+    high.educ.bl == "4th grade" ~ "< HS Diploma",
+    high.educ.bl == "5th grade" ~ "< HS Diploma",
+    high.educ.bl == "6th grade" ~ "< HS Diploma",
+    high.educ.bl == "7th grade" ~ "< HS Diploma",
+    high.educ.bl == "8th grade" ~ "< HS Diploma",
+    high.educ.bl == "9th grade" ~ "< HS Diploma",
+    high.educ.bl == "11th grade" ~ "< HS Diploma",
+    high.educ.bl == "12th grade" ~ "< HS Diploma",
+    high.educ.bl == "GED or equivalent Diploma" ~ "HS Diploma/GED Post",
+    high.educ.bl == "High school graduate" ~ "HS Diploma/GED Post",
+    high.educ.bl == "Associate degree: Academic Program " ~ "Some College",
+    high.educ.bl == "Associate degree: Occupational" ~ "Some College",
+    high.educ.bl == "Some college" ~ "Some College",
+    high.educ.bl == "Bachelor's degree (ex. BA" ~ "Bachelor",
+    high.educ.bl == "Master's degree (ex. MA" ~ "Post Graduate Degree",
+    high.educ.bl == "Doctoral degree (ex. PhD" ~ "Post Graduate Degree",
+    high.educ.bl == "Professional School degree (ex. MD" ~ "Post Graduate Degree",
+    high.educ.bl == "Refused to answer" ~ "Refuse to answer"))
+
+####################
+#creating the bilateral imaging variables. 
+#MID_imaging was a dataframe that contained the needed imaging variables
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.DACCLHRH <- (MID_imaging$tfmri_ma_allvn_b_cds_clatcgelh+MID_imaging$tfmri_ma_allvn_b_cds_clatcgerh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.AmygLHRH <- (MID_imaging$tfmri_ma_aclvn_b_scs_aylh + 
+                                                     MID_imaging$tfmri_ma_aclvn_b_scs_ayrh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.InsulaLHRH <- (MID_imaging$tfmri_ma_allvn_b_cds_insulalh + 
+                                                       MID_imaging$tfmri_ma_allvn_b_cds_insularh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.LOFCLHRH <- (MID_imaging$tfmri_ma_allvn_b_cds_lobofrlh + 
+                                                     MID_imaging$tfmri_ma_allvn_b_cds_lobofrrh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.MOFCLHRH <- (MID_imaging$tfmri_ma_allvn_b_cds_mobofrlh + 
+                                                     MID_imaging$tfmri_ma_allvn_b_cds_mobofrrh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.NACCLHRH <- (MID_imaging$tfmri_ma_aclvn_b_scs_aalh + 
+                                                     MID_imaging$tfmri_ma_aclvn_b_scs_aarh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.CaudateLHRH <- (MID_imaging$tfmri_ma_aclvn_b_scs_cdlh + 
+                                                        MID_imaging$tfmri_ma_aclvn_b_scs_cdrh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.PallidumLHRH <- (MID_imaging$tfmri_ma_aclvn_b_scs_pdlh + 
+                                                         MID_imaging$tfmri_ma_aclvn_b_scs_pdrh)/2
+
+MID_imaging$Ant.Large.Loss.Vs.Neutral.PutamenLHRH <- (MID_imaging$tfmri_ma_aclvn_b_scs_ptlh + 
+                                                        MID_imaging$tfmri_ma_aclvn_b_scs_ptrh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.DACCLHRH <- (MID_imaging$tfmri_ma_alrvn_b_cds_clatcgelh + 
+                                                       MID_imaging$tfmri_ma_alrvn_b_cds_clatcgerh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.InsulaLHRH <- (MID_imaging$tfmri_ma_alrvn_b_cds_insulalh + 
+                                                         MID_imaging$tfmri_ma_alrvn_b_cds_insularh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.MOFCLHRH <- (MID_imaging$tfmri_ma_alrvn_b_cds_mobofrlh + 
+                                                       MID_imaging$tfmri_ma_alrvn_b_cds_mobofrrh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.LOFCLHRH <- (MID_imaging$tfmri_ma_alrvn_b_cds_lobofrrh + 
+                                                       MID_imaging$tfmri_ma_alrvn_b_cds_lobofrlh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.NACCLHRH <- (MID_imaging$tfmri_ma_alrvn_b_scs_aalh + 
+                                                       MID_imaging$tfmri_ma_alrvn_b_scs_aarh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.AmygdalaLHRH <- (MID_imaging$tfmri_ma_alrvn_b_scs_aylh + 
+                                                           MID_imaging$tfmri_ma_alrvn_b_scs_ayrh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.CaudateLHRH <- (MID_imaging$tfmri_ma_alrvn_b_scs_cdlh + 
+                                                          MID_imaging$tfmri_ma_alrvn_b_scs_cdrh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.PallLHRH <- (MID_imaging$tfmri_ma_alrvn_b_scs_pdlh + 
+                                                       MID_imaging$tfmri_ma_alrvn_b_scs_pdrh)/2
+
+MID_imaging$Ant.Large.Reward.Vs.Neutral.PutamenLHRH <- (MID_imaging$tfmri_ma_alrvn_b_scs_ptlh + 
+                                                          MID_imaging$tfmri_ma_alrvn_b_scs_ptrh)/2
+
+MID_imaging$All.Loss.Positive.Vs.Negative.NACCLHRH <- (MID_imaging$tfmri_ma_lpvnfb_b_scs_aalh + 
+                                                         MID_imaging$tfmri_ma_lpvnfb_b_scs_aarh)/2
+
+
+MID_imaging$All.Loss.Positive.Vs.Negative.AmygdalaLHRH <- (MID_imaging$tfmri_ma_lpvnfb_b_scs_aylh + 
+                                                             MID_imaging$tfmri_ma_lpvnfb_b_scs_ayrh)/2
+
+
+MID_imaging$All.Loss.Positive.Vs.Negative.PallidumLHRH <- (MID_imaging$tfmri_ma_lpvnfb_b_scs_pdlh + 
+                                                             MID_imaging$tfmri_ma_lpvnfb_b_scs_pdrh)/2
+
+MID_imaging$All.Loss.Positive.Vs.Negative.PutamenLHRH <- (MID_imaging$tfmri_ma_lpvnfb_b_scs_ptlh + 
+                                                            MID_imaging$tfmri_ma_lpvnfb_b_scs_ptrh)/2
+
+
+MID_imaging$All.Loss.Positive.Vs.Negative.CaudLHRH <- (MID_imaging$tfmri_ma_lpvnfb_b_scs_cdlh + 
+                                                         MID_imaging$tfmri_ma_lpvnfb_b_scs_cdrh)/2
+
+
+MID_imaging$All.Loss.Positive.Vs.Negative.DACCLHRH <- (MID_imaging$tfmri_ma_lvnfb_b_cds_clatcgelh + 
+                                                         MID_imaging$tfmri_ma_lvnfb_b_cds_clatcgerh)/2
+
+MID_imaging$All.Loss.Positive.Vs.Negative.LOFCLHRH <- (MID_imaging$tfmri_ma_lvnfb_b_cds_lobofrlh + 
+                                                         MID_imaging$tfmri_ma_lvnfb_b_cds_lobofrrh)/2
+
+MID_imaging$All.Loss.Positive.Vs.Negative.MOFCLHRH <- (MID_imaging$tfmri_ma_lvnfb_b_cds_mobofrlh + 
+                                                         MID_imaging$tfmri_ma_lvnfb_b_cds_mobofrrh)/2
+
+
+MID_imaging$All.Loss.Positive.Vs.Negative.InsulaLHRH <- (MID_imaging$tfmri_ma_lvnfb_b_cds_insulalh + 
+                                                           MID_imaging$tfmri_ma_lvnfb_b_cds_insularh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.CaudateLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_scs_cdlh + 
+                                                              MID_imaging$tfmri_ma_rpvnfb_b_scs_cdrh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.PutamenLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_scs_ptlh + 
+                                                              MID_imaging$tfmri_ma_rpvnfb_b_scs_ptrh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.PallidumLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_scs_pdlh + 
+                                                               MID_imaging$tfmri_ma_rpvnfb_b_scs_pdrh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.AmygdalaLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_scs_aylh + 
+                                                               MID_imaging$tfmri_ma_rpvnfb_b_scs_ayrh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.NACCLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_scs_aalh + 
+                                                           MID_imaging$tfmri_ma_rpvnfb_b_scs_aarh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.DACCLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_cds_clcgelh + 
+                                                           MID_imaging$tfmri_ma_rpvnfb_b_cds_clagerh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.LOFCLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_cds_lobofrlh + 
+                                                           MID_imaging$tfmri_ma_rpvnfb_b_cds_lobofrrh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.MOFCLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_cds_mobofrlh + 
+                                                           MID_imaging$tfmri_ma_rpvnfb_b_cds_mobofrrh)/2
+
+MID_imaging$All.Reward.Positive.Vs.Negative.InsulaLHRH <- (MID_imaging$tfmri_ma_rpvnfb_b_cds_insulalh + 
+                                                             MID_imaging$tfmri_ma_rpvnfb_b_cds_insularh)/2
+
+####
+###now merge back to the larger dataframe.
+
+ABCD_VGAQ <-  merge(ABCD_VGAQ, MID_imaging,
+                        all.x =TRUE, by=c("eventname", "src_subject_id"))
+
+##################
