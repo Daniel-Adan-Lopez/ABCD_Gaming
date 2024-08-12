@@ -16,7 +16,7 @@ model_Longitudinal_1 <- brm(VGTotal_zero ~ 1+Ant.Large.Reward.Vs.Neutral.Amygdal
                                 Ant.Large.Reward.Vs.Neutral.MOFCLHRH+Ant.Large.Reward.Vs.Neutral.NACCLHRH+Ant.Large.Reward.Vs.Neutral.PallLHRH+
                                 Ant.Large.Reward.Vs.Neutral.PutamenLHRH+
                                 sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
-                              +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                              +interview_age_scaled+ADHD_Present_KSAD+site_id_l+
                                 (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
                               chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
                               control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
@@ -27,7 +27,7 @@ model_Longitudinal_2 <- brm(VGTotal_zero ~ 1+ All.Loss.Positive.Vs.Negative.NACC
                               All.Loss.Positive.Vs.Negative.PutamenLHRH+ All.Loss.Positive.Vs.Negative.CaudLHRH+ All.Loss.Positive.Vs.Negative.DACCLHRH+
                               All.Loss.Positive.Vs.Negative.LOFCLHRH+ All.Loss.Positive.Vs.Negative.MOFCLHRH+ All.Loss.Positive.Vs.Negative.InsulaLHRH+
                               sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
-                            +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                            +interview_age_scaled+ADHD_Present_KSAD+site_id_l+
                               (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
                             chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
                             control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
@@ -39,7 +39,7 @@ model_Longitudinal_3 <- brm(VGTotal_zero ~ 1+ Ant.Large.Loss.Vs.Neutral.CaudateL
                               Ant.Large.Loss.Vs.Neutral.NACCLHRH+ Ant.Large.Loss.Vs.Neutral.PallidumLHRH+ Ant.Large.Loss.Vs.Neutral.PutamenLHRH+
                               Ant.Large.Loss.Vs.Neutral.AmygLHRH+
                               sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
-                            +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                            +interview_age_scaled+ADHD_Present_KSAD+site_id_l+
                               (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
                             chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
                             control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
@@ -50,7 +50,7 @@ model_Longitudinal_4 <- brm(VGTotal_zero ~ 1+All.Reward.Positive.Vs.Negative.Cau
                               All.Reward.Positive.Vs.Negative.DACCLHRH+ All.Reward.Positive.Vs.Negative.LOFCLHRH+ All.Reward.Positive.Vs.Negative.MOFCLHRH+
                               All.Reward.Positive.Vs.Negative.InsulaLHRH+
                               sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
-                            +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                            +interview_age_scaled+ADHD_Present_KSAD+site_id_l+
                               (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
                             chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
                             control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
