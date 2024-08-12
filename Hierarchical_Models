@@ -1,0 +1,54 @@
+#brms models using parallel processing
+#specifying priors
+##########
+prior <- c(
+  set_prior("normal(0, 1)", class = "b"),     # Priors for fixed effects
+  set_prior("cauchy(0, 2)", class = "sd"),    # Priors for standard deviations of random effects
+  set_prior("normal(2, 0.1)", class = "sigma") # Prior for the gaussian dispersion parameter
+ 
+)
+########
+#model 1 for Anticipation of Large Reward vs Neutral condition
+model_Longitudinal_1 <- brm(VGTotal_zero ~ 1+Ant.Large.Reward.Vs.Neutral.AmygdalaLHRH+Ant.Large.Reward.Vs.Neutral.CaudateLHRH+
+                                Ant.Large.Reward.Vs.Neutral.DACCLHRH+Ant.Large.Reward.Vs.Neutral.InsulaLHRH+Ant.Large.Reward.Vs.Neutral.LOFCLHRH+
+                                Ant.Large.Reward.Vs.Neutral.MOFCLHRH+Ant.Large.Reward.Vs.Neutral.NACCLHRH+Ant.Large.Reward.Vs.Neutral.PallLHRH+
+                                Ant.Large.Reward.Vs.Neutral.PutamenLHRH+
+                                sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
+                              +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                                (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
+                              chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
+                              control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
+
+#######
+#model 2 for All Loss Positive feedback
+model_Longitudinal_2 <- brm(VGTotal_zero ~ 1+ All.Loss.Positive.Vs.Negative.NACCLHRH+ All.Loss.Positive.Vs.Negative.AmygdalaLHRH+ All.Loss.Positive.Vs.Negative.PallidumLHRH+
+                              All.Loss.Positive.Vs.Negative.PutamenLHRH+ All.Loss.Positive.Vs.Negative.CaudLHRH+ All.Loss.Positive.Vs.Negative.DACCLHRH+
+                              All.Loss.Positive.Vs.Negative.LOFCLHRH+ All.Loss.Positive.Vs.Negative.MOFCLHRH+ All.Loss.Positive.Vs.Negative.InsulaLHRH+
+                              sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
+                            +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                              (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
+                            chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
+                            control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
+
+###########
+#model 3 for Anticipation of Large Loss vs Neutral condition
+model_Longitudinal_3 <- brm(VGTotal_zero ~ 1+ Ant.Large.Loss.Vs.Neutral.CaudateLHRH+ Ant.Large.Loss.Vs.Neutral.DACCLHRH+
+                              Ant.Large.Loss.Vs.Neutral.InsulaLHRH+ Ant.Large.Loss.Vs.Neutral.LOFCLHRH+ Ant.Large.Loss.Vs.Neutral.MOFCLHRH+
+                              Ant.Large.Loss.Vs.Neutral.NACCLHRH+ Ant.Large.Loss.Vs.Neutral.PallidumLHRH+ Ant.Large.Loss.Vs.Neutral.PutamenLHRH+
+                              Ant.Large.Loss.Vs.Neutral.AmygLHRH+
+                              sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
+                            +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                              (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
+                            chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
+                            control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
+##########
+#model 4 for All Reward Positive feedback
+model_Longitudinal_4 <- brm(VGTotal_zero ~ 1+All.Reward.Positive.Vs.Negative.CaudateLHRH+ All.Reward.Positive.Vs.Negative.PutamenLHRH+ All.Reward.Positive.Vs.Negative.PallidumLHRH+
+                              All.Reward.Positive.Vs.Negative.AmygdalaLHRH+ All.Reward.Positive.Vs.Negative.NACCLHRH+
+                              All.Reward.Positive.Vs.Negative.DACCLHRH+ All.Reward.Positive.Vs.Negative.LOFCLHRH+ All.Reward.Positive.Vs.Negative.MOFCLHRH+
+                              All.Reward.Positive.Vs.Negative.InsulaLHRH+
+                              sex+high_educ_bl+hhincome_bl+pmq_y_ss_mean_scaled+factor(race_ethnicity)+neighborhood_crime_y
+                            +interview_age_scaled+ADHD_Present_KSAD_2+site_id_l+
+                              (1+interview_age_scaled|rel_family_id.bl/src_subject_id),
+                            chains=4, cores=4, warmup=1000, iter=3000, family=gaussian(), prior=prior,
+                            control=list(adapt_delta=0.95), seed=1234, backend="cmdstanr", threads = threading(4),silent=0, data=ABCD_VG_final)
